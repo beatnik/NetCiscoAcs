@@ -23,3 +23,5 @@ scripts/m12.pl
 scripts/m13.pl
 scripts/m14.pl
 t/001_load.t
+META.yml
+META.json
