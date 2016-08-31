@@ -5,4 +5,4 @@ use Net::Cisco::ACS;
 use Data::Dumper;
 
 my $acs = Net::Cisco::ACS->new(hostname => '10.0.0.0', username => 'acsadmin', password => 'password');
-print Dumper $acs->users("name","hendrikvb")->toXML;
+print Dumper $acs->users("name","acsadmin")->toXML;

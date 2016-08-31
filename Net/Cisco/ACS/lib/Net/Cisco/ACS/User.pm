@@ -13,12 +13,14 @@ BEGIN {
 };
 
     %actions = (	"query" => "/Rest/Identity/User",
-   		     	"create" => "/Rest/Identity/User",
-               		 "update" => "/Rest/Identity/User",
+					"create" => "/Rest/Identity/User",
+               		"update" => "/Rest/Identity/User",
                 	"getByName" => "/Rest/Identity/User/name/",
                 	"getById" => "/Rest/Identity/User/id/",
            ); 
 
+# MOOSE!
+		   
 has 'description' => (
       is  => 'rw',
       isa => 'Any',
@@ -39,7 +41,7 @@ has 'name' => (
 	isa => 'Str',
 	);
 
-has 'expirationdate' => ( 
+has 'dateExceeds' => ( 
 	is => 'rw',
 	isa => 'Str',
 	);
@@ -54,62 +56,104 @@ has 'created' => (
 	isa => 'Str',
 	);
 
-has attributeInfo => ( 
+has 'attributeInfo' => ( 
 	is => 'ro',
 	isa => 'ArrayRef',
 	auto_deref => '1',
 	);		
 
-has dateExceedsEnabled => (
+has 'dateExceedsEnabled' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has enablePassword => (
+has 'enablePassword' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has enabled => (
+has 'enabled' => (
 	is => 'rw', 
 	isa => 'Str',
 	);
 
-has lastLogin => (
+has 'lastLogin' => (
 	is => 'ro',
 	isa => 'Any',
 	);
 
-has lastModified => (
+has 'lastModified' => (
 	is => 'ro',
 	isa => 'Str',
 	);
 
-has lastPasswordChange => ( 
+has 'lastPasswordChange' => ( 
 	is => 'ro',
 	isa => 'Str',
 	);
 
-has loginFailuresCounter => (
+has 'loginFailuresCounter' => (
 	is => 'ro',
 	isa => 'Int',
 	);
 
-has password => (
+has 'password' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has passwordNeverExpires => (
+has 'passwordNeverExpires' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has PasswordType => (
+has 'passwordType' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
+# No Moose	
+	
+sub toXML
+{ my $self = shift;
+  my $id = $self->id;
+  my $description = $self->description || ""; 
+  my $identitygroupname = $self->identityGroupName || "All Groups";
+  my $name = $self->name || "";
+  my $changepassword = $self->changePassword || "false";
+  my $enabled = $self->enabled || "true";
+  my $password = $self->password || "";
+  my $passwordneverexpires = $self->passwordNeverExpires || "false";
+  my $passwordtype = $self->passwordType || "Internal Users";
+  my $enablepassword = $self->enablePassword || "";
+  my $dateexceeds = $self->dateExceeds || "";
+  my $dateexceedsenabled = $self->dateExceedsEnabled || "false";
+  my $result = "";
+  
+  if ($id) { $result = "   <id>$id</id>\n"; }
+  $result .= <<XML;
+   <description>$description</description>
+   <identityGroupName>$identitygroupname</identityGroupName>
+   <name>$name</name>
+   <changePassword>$changepassword</changePassword>
+   <enablePassword>$enablepassword</enablePassword>
+   <enabled>$enabled</enabled>
+   <password>$password</password>
+   <passwordNeverExpires>$passwordneverexpires</passwordNeverExpires>
+   <passwordType>$passwordtype</passwordType>
+   <dateExceeds>$dateexceeds</dateExceeds>
+   <dateExceedsEnabled>$dateexceedsenabled</dateExceedsEnabled>
+XML
+
+return $result;
+}
+
+sub header
+{ my $self = shift;
+  my $users = shift;
+  return qq{<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns2:user xmlns:ns2="identity.rest.mgmt.acs.nm.cisco.com">$users</ns2:user>};
+}
+	
 =head1 NAME
 
 Net::Cisco::ACS::User - Access Cisco ACS functionality through REST API - User fields
@@ -117,14 +161,25 @@ Net::Cisco::ACS::User - Access Cisco ACS functionality through REST API - User f
 =head1 SYNOPSIS
 
   use Net::Cisco::ACS::User;
+  my $user = Net::Cisco::ACS::User->new("name"=>"soloh","description"=>"Han Solo","identityGroupName"=>"All Groups:MilleniumCrew","password"=>"Leia");
 
-
+  Fields
+  - description
+  - name
+  - changePassword
+  - enablePassword
+  - enabled
+  - password
+  - passwordNeverExpires
+  - passwordType
+  - dateExceeds
+  - dateExceedsEnabled
+  
 =head1 DESCRIPTION
 
 The Net::Cisco::ACS::User class holds all the user relevant information from Cisco ACS 5.x
 
 =head1 USAGE
-
 
 
 =head1 BUGS

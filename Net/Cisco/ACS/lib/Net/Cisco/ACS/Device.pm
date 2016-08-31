@@ -1,6 +1,7 @@
 package Net::Cisco::ACS::Device;
 use strict;
 use Moose;
+use Data::Dumper;
 
 BEGIN {
     use Exporter ();
@@ -13,12 +14,19 @@ BEGIN {
 };
 
     %actions = (	"query" => "/Rest/NetworkDevice/Device",
-   		     	"create" => "/Rest/NetworkDevice/Device",
-               		 "update" => "/Rest/NetworkDevice/Device",
+					"create" => "/Rest/NetworkDevice/Device",
+               		"update" => "/Rest/NetworkDevice/Device",
                 	"getByName" => "/Rest/NetworkDevice/Device/name/",
                 	"getById" => "/Rest/NetworkDevice/Device/id/",
            ); 
 
+# MOOSE!		   
+
+sub BUILD # after Method Modifier for constructor!
+{ my $self = shift;
+  # Some magic here
+}
+	   
 has 'description' => (
       is  => 'rw',
       isa => 'Any',
@@ -35,33 +43,55 @@ has 'name' => (
 	);
 
 has 'tacacsConnection' => (
-	is => 'ro',
+	is => 'rw',
 	isa => 'HashRef',
+	trigger => \&parseTacacsConnection,
 	auto_deref => 1,
 	);
 
+sub parseTacacsConnection
+{ my $self = shift;
+  my $new_ref = shift;
+  $self->singleConnect($self->tacacsConnection->{"singleConnect"});
+  $self->tacacs_SharedSecret($self->tacacsConnection->{"sharedSecret"});
+  $self->legacyTACACS($self->tacacsConnection->{"legacyTACACS"});
+};
+
 has 'groupInfo' => ( 
+	isa => 'Any',
 	is => 'rw',
-	isa => 'ArrayRef',
-	auto_deref => '1',
+	trigger => \&parseGroupInfo,
 	);
 
-has 'legacytacacs' => (
+sub parseGroupInfo # STILL TO DO: Implement non-default groups!
+{ my $self = shift;
+  my $new_ref = shift;
+  for my $entry (@{ $new_ref })
+  { if ($entry->{"groupType"} eq "Location")
+    { $self->location($entry->{"groupName"});
+    }
+    if ($entry->{"groupType"} eq "Device Type")
+    { $self->deviceType($entry->{"groupName"});
+    }
+  }
+}
+	
+has 'legacyTACACS' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'tacacs_sharedsecret' => (
+has 'tacacs_SharedSecret' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'singleconnect' => (
+has 'singleConnect' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'radius_sharedsecret' => (
+has 'radius_SharedSecret' => (
 	is => 'rw',
 	isa => 'Str',
 	);
@@ -69,39 +99,128 @@ has 'radius_sharedsecret' => (
 has 'subnets' => (
 	is => 'rw',
 	isa => 'Any',
+	trigger => \&parseSubnet, # trigger modifier is calling within constructor
 	);
 
+sub parseSubnet
+{ my $self = shift;
+  my $new_ref = shift;
+  my @ips = ();
+  if (ref($new_ref) eq "HASH")
+  { push(@ips,{ netMask => $new_ref->{"netMask"}, ipAddress => $new_ref->{"ipAddress"} }); }
+  if (ref($new_ref) eq "ARRAY")
+  { for my $entry (@ { $new_ref })
+    { if (ref($entry) eq "HASH")
+	  { push(@ips,{ netMask => $entry->{"netMask"}, ipAddress => $entry->{"ipAddress"} }); } 
+	}
+  }
+  $self->ips([@ips]);
+}
+
+has 'ips' => (
+	is => 'rw',
+	isa => 'ArrayRef',
+	auto_deref => 1,
+	);
+	
 has 'location' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'groupInfo' => (
-	is => 'rw',
-	isa => 'ArrayRef',
-	auto_deref => '1',
-	);
-
-has 'devicetype' => (
+has 'deviceType' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'displayedinhex' => (
+has 'displayedInHex' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'keywrap' => (
+has 'keyWrap' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
-has 'portcoa' => (
+has 'portCOA' => (
 	is => 'rw',
 	isa => 'Str',
 	);
 
+# No Moose	
+
+sub toXML
+{ my $self = shift;
+  my $result = "";
+  my $id = $self->id;
+  my $description = $self->description || "";
+  my $name = $self->name || "";
+  my $location = $self->location || "All Locations";
+  my $devicetype = $self->deviceType || "All Device Types";
+
+  my $legacytacacs = $self->legacyTACACS || "false";
+  my $tacacs_sharedsecret = $self->tacacs_SharedSecret || "";  
+  my $singleconnect = $self->singleConnect || "false";
+
+  my $displayedinhex = $self->displayedInHex || "true";
+  my $keywrap = $self->keyWrap || "false";
+  my $portcoa = $self->portCOA || "1700";
+  my $radius_sharedsecret = $self->radius_SharedSecret || "";
+
+  $result = <<XML;
+	<description>$description</description>
+	<name>$name</name>
+	<groupInfo>
+	<groupName>$devicetype</groupName>
+	<groupType>Device Type</groupType>
+	</groupInfo>
+	<groupInfo>
+	<groupName>$location</groupName>
+	<groupType>Location</groupType>
+	</groupInfo>
+XML
+
+  if (ref($self->ips) eq "ARRAY")
+  { for my $ref ( @{ $self->ips } )
+    { my $netmask = $ref->{'netMask'};
+	  my $ipaddress = $ref->{'ipAddress'};
+	  $result .= <<XML;
+	<subnets><ipAddress>$ipaddress</ipAddress><netMask>$netmask</netMask></subnets>
+XML
+	}
+  }
+
+  if ($tacacs_sharedsecret) {
+  $result .= <<XML;
+	<tacacsConnection>
+	<legacyTACACS>$legacytacacs</legacyTACACS>
+	<sharedSecret>$tacacs_sharedsecret</sharedSecret>
+	<singleConnect>$singleconnect</singleConnect>
+	</tacacsConnection>
+XML
+  }
+
+  if ($radius_sharedsecret)
+  { $result .= <<XML;
+	<radiusConnection>
+	<displayedInHex>$displayedinhex</displayedInHex>
+	<keyWrap>$keywrap</keyWrap>
+	<portCoA>$portcoa</portCoA>
+	<sharedSecret>$radius_sharedsecret</sharedSecret>
+	</radiusConnection>
+XML
+  }
+
+  return $result;
+}
+
+sub header
+{ my $self = shift;
+  my $devices = shift;
+  return qq(<?xml version="1.0" encoding="UTF-8" standalone="yes"?><ns1:device xmlns:ns1="networkdevice.rest.mgmt.acs.nm.cisco.com">$devices</ns1:device>);
+}
+	
 =head1 NAME
 
 Net::Cisco::ACS::Device - Access Cisco ACS functionality through REST API - Device fields
