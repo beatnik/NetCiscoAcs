@@ -8,4 +8,9 @@ Revision history for Perl module Net::Cisco::ACS
     - Added delete function
     - Added documentation
 
+0.02 Fri Sep 01 19:12:46 2016
+    - Added support for IdentityGroup
+    - Added support for Host
+    - Added support for ServiceLocation, Version and ErrorMessage
+    - Added LOTS of documentation
 

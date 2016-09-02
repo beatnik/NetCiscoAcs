@@ -6,5 +6,6 @@ use Data::Dumper;
 
 my $acs = Net::Cisco::ACS->new(hostname => '10.0.0.0', username => 'acsadmin', password => 'password');
 
-print Dumper $acs->devices;
-
+print Dumper $acs->version;
+print Dumper $acs->servicelocation;
+print Dumper $acs->errormessage;

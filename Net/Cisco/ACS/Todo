@@ -1,8 +1,5 @@
 TODO list for Perl module Net::Cisco::ACS
 
-- Add support for VERSION REST
-- Add support for custom attributes
-- Add support for other REST functions
-
+- Some more documentation
 
 

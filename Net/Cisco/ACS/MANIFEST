@@ -8,6 +8,8 @@ lib/Net/Cisco/ACS.pm
 lib/Net/Cisco/ACS/Device.pm
 lib/Net/Cisco/ACS/DeviceGroup.pm
 lib/Net/Cisco/ACS/User.pm
+lib/Net/Cisco/ACS/IdentityGroup.pm
+lib/Net/Cisco/ACS/Host.pm
 scripts/m1.pl
 scripts/m2.pl
 scripts/m3.pl
@@ -22,6 +24,10 @@ scripts/m11.pl
 scripts/m12.pl
 scripts/m13.pl
 scripts/m14.pl
+scripts/m15.pl
+scripts/m16.pl
+scripts/m17.pl
+scripts/m18.pl
 t/001_load.t
 META.yml
 META.json

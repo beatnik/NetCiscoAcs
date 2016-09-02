@@ -5,7 +5,8 @@ use Net::Cisco::ACS;
 use Data::Dumper;
 
 my $acs = Net::Cisco::ACS->new(hostname => '10.0.0.0', username => 'acsadmin', password => 'password');
-my $user = $acs->users("name","acsadmin");
+
+my $user = $acs->users("name","Main_Router");
 $user->id("0");
 $user->name("foobar");
 $user->description("Test User");
