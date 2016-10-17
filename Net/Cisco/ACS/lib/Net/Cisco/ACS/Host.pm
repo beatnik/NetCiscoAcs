@@ -6,7 +6,7 @@ use Data::Dumper;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %actions);
-    $VERSION     = '0.02';
+    $VERSION     = '0.03';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -154,10 +154,14 @@ Class constructor. Returns object of L<Net::Cisco::ACS::Host> on succes. The fol
 
 =over 5
 
-=item description 
+=item description
+
 =item enabled
+
 =item identityGroupName
+
 =item macAddress
+
 =item id
 
 Formatting rules may be in place & enforced by Cisco ACS.
@@ -169,7 +173,9 @@ Read-only values:
 =over 5
 
 =item created
+
 =item lastModified
+
 =item lastEnabled
 
 =back
@@ -202,6 +208,7 @@ Generate the correct XML header. Takes output of C<toXML> as argument.
 
 =back
 
+=back
 
 =head1 BUGS
 

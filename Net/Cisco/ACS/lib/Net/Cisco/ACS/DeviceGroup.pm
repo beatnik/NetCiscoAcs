@@ -6,7 +6,7 @@ use Data::Dumper;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %actions);
-    $VERSION     = '0.02';
+    $VERSION     = '0.03';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -127,8 +127,11 @@ Class constructor. Returns object of Net::Cisco::ACS::DeviceGroup on succes. The
 =over 5
 
 =item description 
+
 =item name 
+
 =item id
+
 =item groupType
 
 Formatting rules may be in place & enforced by Cisco ACS.
@@ -160,6 +163,8 @@ Dump the record in ACS accept XML formatting (without header).
 =item header
 
 Generate the correct XML header. Takes output of C<toXML> as argument.
+
+=back
 
 =back
 

@@ -5,7 +5,7 @@ use Moose;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %actions);
-    $VERSION     = '0.02';
+    $VERSION     = '0.03';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -214,15 +214,25 @@ Class constructor. Returns object of Net::Cisco::ACS::User on succes. The follow
 =over 5
 
 =item description 
+
 =item name 
+
 =item identityGroupName
+
 =item enablePassword
+
 =item enabled
+
 =item password
+
 =item passwordNeverExpires
+
 =item passwordType
+
 =item dateExceeds
+
 =item dateExceedsEnabled
+
 =item id
 
 Formatting rules may be in place & enforced by Cisco ACS.
@@ -234,11 +244,17 @@ Read-only values:
 =over 5
 
 =item changePassword
+
 =item created
+
 =item attributeInfo
+
 =item lastLogin
+
 =item lastModified
+
 =item lastPasswordChange
+
 =item loginFailuresCounter
 
 =back
@@ -296,6 +312,8 @@ Dump the record in ACS accept XML formatting (without header).
 =item header
 
 Generate the correct XML header. Takes output of C<toXML> as argument.
+
+=back
 
 =back
 

@@ -14,3 +14,6 @@ Revision history for Perl module Net::Cisco::ACS
     - Added support for ServiceLocation, Version and ErrorMessage
     - Added LOTS of documentation
 
+0.03 Mon Oct 17 19:30:00 2016
+    - Extended functionality of create and update
+    - Fixed some POD

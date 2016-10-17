@@ -6,7 +6,7 @@ use Data::Dumper;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %actions);
-    $VERSION     = '0.02';
+    $VERSION     = '0.03';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -275,20 +275,35 @@ Class constructor. Returns object of Net::Cisco::ACS::Device on succes. The foll
 =over 5
 
 =item description
+
 =item id
+
 =item name
+
 =item tacacsConnection
+
 =item groupInfo 
+
 =item legacyTACACS
+
 =item tacacs_SharedSecret
+
 =item singleConnect
+
 =item radius_SharedSecret
+
 =item subnets
+
 =item ips
+
 =item location
+
 =item deviceType
+
 =item displayedInHex
+
 =item keyWrap
+
 =item portCOA
 
 =back
@@ -377,25 +392,11 @@ Generate the correct XML header. Takes output of C<toXML> as argument.
 
 The device group account description, typically used for full device group name.
 
-=item name 
-
-The device group name. This is a required value in the constructor but can be redefined afterwards.
-
 =item groupType
 
 This points to the type of Device Group, typically Location or Device Type but can be customized. See also L<Net::Cisco::ACS::Device> C<deviceType>.
 
-=item id
-
-Cisco ACS generates a unique ID for each Device Group record. This field cannot be updated within ACS but is used for reference. Set to 0 when creating a new record or when duplicating an existing device group.
-
-=item toXML
-
-Dump the record in ACS accept XML formatting (without header).
-
-=item header
-
-Generate the correct XML header. Takes output of C<toXML> as argument.
+=back
 
 =back
 

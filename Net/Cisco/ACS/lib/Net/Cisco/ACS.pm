@@ -22,7 +22,7 @@ use Net::Cisco::ACS::Host;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $ERROR %actions);
-    $VERSION     = '0.02';
+    $VERSION     = '0.03';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -261,7 +261,6 @@ sub query
   my $request = HTTP::Request->new(GET => $hostname );
   $request->header('Authorization' => "Basic $credentials");
   my $result = $useragent->request($request);
-  warn Dumper $result->content;
   if ($result->code eq "400") { $ERROR = "Bad Request - HTTP Status: 400"; }
   if ($result->code eq "410") { $ERROR = "Unknown $type queried by name or ID - HTTP Status: 410"; }  
   $self->parse_xml($mode, $result->content);
@@ -269,42 +268,41 @@ sub query
 
 sub create 
 { my $self = shift;
-  my $record = shift;
+  my @entries = @_;
+  return unless @entries;
   my $hostname = $self->hostname;
   my $credentials = encode_base64($self->username.":".$self->password);
   if ($self->ssl)
   { $hostname = "https://$hostname"; } else
   { $hostname = "http://$hostname"; }
   my $action = "";
-  my $type = "";
-  
-  if (ref($record) eq "ARRAY") { $record = $record->[0]; }
-  if (ref($record) eq "Net::Cisco::ACS::User")
-  { $action = $Net::Cisco::ACS::User::actions{"create"}; 
-    $type = "User";
-  }
+  my $data = "";
+  my $first = $entries[0];
+  while(@entries)
+  { my $record = shift @entries; 
+    if (ref($record) eq "Net::Cisco::ACS::User")
+    { $action = $Net::Cisco::ACS::User::actions{"create"}; 
+    }
 
-  if (ref($record) eq "Net::Cisco::ACS::IdentityGroup")
-  { $action = $Net::Cisco::ACS::IdentityGroup::actions{"create"}; 
-    $type = "IdentityGroup";
-  }
- 
-  if (ref($record) eq "Net::Cisco::ACS::Device")
-  { $action = $Net::Cisco::ACS::Device::actions{"create"}; 
-    $type = "DeviceGroup";
-  }
-  
-  if (ref($record) eq "Net::Cisco::ACS::DeviceGroup")
-  { $action = $Net::Cisco::ACS::DeviceGroup::actions{"create"}; 
-    $type = "DeviceGroup";
-  }
+    if (ref($record) eq "Net::Cisco::ACS::IdentityGroup")
+    { $action = $Net::Cisco::ACS::IdentityGroup::actions{"create"}; 
+    }
 
-  if (ref($record) eq "Net::Cisco::ACS::Host")
-  { $action = $Net::Cisco::ACS::Host::actions{"create"}; 
-    $type = "Host";
-  }
+    if (ref($record) eq "Net::Cisco::ACS::Device")
+    { $action = $Net::Cisco::ACS::Device::actions{"create"}; 
+    }
   
-  my $data = $record->header($record->toXML);
+    if (ref($record) eq "Net::Cisco::ACS::DeviceGroup")
+    { $action = $Net::Cisco::ACS::DeviceGroup::actions{"create"}; 
+    }
+
+    if (ref($record) eq "Net::Cisco::ACS::Host")
+    { $action = $Net::Cisco::ACS::Host::actions{"create"}; 
+    }
+    $data .= $record->toXML;
+  }  
+  
+  $data = $first->header($data);
   $hostname = $hostname . $action;
   my $useragent = LWP::UserAgent->new (ssl_opts => $self->ssl_options);
   my $request = HTTP::Request->new(POST => $hostname );
@@ -323,39 +321,40 @@ sub create
 
 sub update 
 { my $self = shift;
-  my $record = shift;
+  my @entries = @_;
   my $hostname = $self->hostname;
   my $credentials = encode_base64($self->username.":".$self->password);
   if ($self->ssl)
   { $hostname = "https://$hostname"; } else
   { $hostname = "http://$hostname"; }
   my $action = "";
-  my $type = "";
+  my $data = "";
+  my $first = $entries[0];
+  while(@entries)
+  { my $record = shift @entries; 
+    if (ref($record) eq "Net::Cisco::ACS::User")
+    { $action = $Net::Cisco::ACS::User::actions{"update"}; 
+    }
+
+    if (ref($record) eq "Net::Cisco::ACS::IdentityGroup")
+    { $action = $Net::Cisco::ACS::IdentityGroup::actions{"update"}; 
+    }
+
+    if (ref($record) eq "Net::Cisco::ACS::Device")
+    { $action = $Net::Cisco::ACS::Device::actions{"update"}; 
+    }
   
-  if (ref($record) eq "ARRAY") { $record = $record->[0]; }
-  if (ref($record) eq "Net::Cisco::ACS::User")
-  { $action = $Net::Cisco::ACS::User::actions{"update"}; 
-    $type = "User";
-  }
-  if (ref($record) eq "Net::Cisco::ACS::IdentityGroup")
-  { $action = $Net::Cisco::ACS::IdentityGroup::actions{"update"}; 
-    $type = "IdentityGroup";
-  }
-  if (ref($record) eq "Net::Cisco::ACS::Device")
-  { $action = $Net::Cisco::ACS::Device::actions{"update"}; 
-    $type = "Device";
-  }
-  if (ref($record) eq "Net::Cisco::ACS::DeviceGroup")
-  { $action = $Net::Cisco::ACS::DeviceGroup::actions{"update"}; 
-    $type = "DeviceGroup";
-  }
+    if (ref($record) eq "Net::Cisco::ACS::DeviceGroup")
+    { $action = $Net::Cisco::ACS::DeviceGroup::actions{"update"}; 
+    }
 
-  if (ref($record) eq "Net::Cisco::ACS::Host")
-  { $action = $Net::Cisco::ACS::Host::actions{"update"}; 
-    $type = "Host";
-  }
+    if (ref($record) eq "Net::Cisco::ACS::Host")
+    { $action = $Net::Cisco::ACS::Host::actions{"update"}; 
+    }
+    $data .= $record->toXML;
+  }  
 
-  my $data = $record->header($record->toXML);
+  $data = $first->header($data);  
   $hostname = $hostname . $action;
   my $useragent = LWP::UserAgent->new (ssl_opts => $self->ssl_options);
   my $request = HTTP::Request->new(PUT => $hostname );
@@ -625,6 +624,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+	my $id = $acs->create(@users); # Still requires nullified ID!
+	# Create new users based on Net::Cisco::ACS::User instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+    
 	$identitygroup->id(0); # Required for new record!
 	my $id = $acs->create($identitygroup);
 	# Create new identity group based on Net::Cisco::ACS::IdentityGroup instance
@@ -632,6 +638,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print "Record ID is $id" if $id;
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
+
+	my $id = $acs->create(@identitygroups); # Still requires nullified ID!
+	# Create new identitygroups based on Net::Cisco::ACS::IdentityGroup instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
 		
 	$device->id(0); # Required for new device!
 	my $id = $acs->create($device);
@@ -641,6 +654,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+   	my $id = $acs->create(@devices); # Still requires nullified ID!
+	# Create new devices based on Net::Cisco::ACS::Device instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+
 	$devicegroup->id(0); # Required for new device group!
 	my $id = $acs->create($devicegroup);
 	# Create new device group based on Net::Cisco::ACS::DeviceGroup instance
@@ -649,6 +669,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+	my $id = $acs->create(@devicegroups); # Still requires nullified ID!
+	# Create new devicegroups based on Net::Cisco::ACS::DeviceGroup instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure        
+    
 	$host->id(0); # Required for new host!
 	my $id = $acs->create($host);
 	# Create new host based on Net::Cisco::ACS::Host instance
@@ -656,6 +683,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print "Record ID is $id" if $id;
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
+
+	my $id = $acs->create(@hosts); # Still requires nullified ID!
+	# Create new hosts based on Net::Cisco::ACS::Host instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
 	
 	my $id = $acs->update($user);
 	# Update existing user based on Net::Cisco::ACS::User instance
@@ -664,12 +698,26 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+	my $id = $acs->update(@users);
+	# Update existing users based on Net::Cisco::ACS::User instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+    
 	my $id = $acs->update($identitygroup);
 	# Update existing identitygroup based on Net::Cisco::ACS::IdentityGroup instance
 	# Return value is ID generated by ACS
 	print "Record ID is $id" if $id;
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
+
+	my $id = $acs->update(@identitygroups);
+	# Update existing identitygroups based on Net::Cisco::ACS::IdentityGroups instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
 	
 	my $id = $acs->update($device);
 	# Update existing device based on Net::Cisco::ACS::Device instance
@@ -678,13 +726,27 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+	my $id = $acs->update(@devices);
+	# Update existing devices based on Net::Cisco::ACS::Device instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+        
 	my $id = $acs->update($devicegroup);
 	# Update existing device based on Net::Cisco::ACS::DeviceGroup instance
 	# Return value is ID generated by ACS
 	print "Record ID is $id" if $id;
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
-
+   
+	my $id = $acs->update(@devicegroups);
+	# Update existing devicegroups based on Net::Cisco::ACS::DeviceGroup instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+        
 	my $id = $acs->update($host);
 	# Update existing device based on Net::Cisco::ACS::Host instance
 	# Return value is ID generated by ACS
@@ -692,6 +754,13 @@ Net::Cisco::ACS - Access Cisco ACS functionality through REST API
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+	my $id = $acs->update(@hosts);
+	# Update existing hosts based on Net::Cisco::ACS::Host instances in arguments
+	# Return value is not guaranteed in this case!
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+        
 	$acs->delete($user);
 	# Delete existing user based on Net::Cisco::ACS::User instance
 
@@ -740,7 +809,7 @@ Class constructor. Returns object of Net::Cisco::ACS on succes. Required fields 
 
 =item username
 
-=password
+=item password
 
 =back
 
@@ -929,6 +998,46 @@ This method created a new entry in Cisco ACS, depending on the argument passed. 
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+Multiple instances can be passed as an argument. Objects will be created in bulk (one transaction). The returned ID is not guaranteed to be the IDs of the created objects.
+
+	my $user = $acs->users("name","acsadmin");
+	$user->id(0); # Required for new user!
+	$user->name("altadmin"); # Required field
+	$user->password("TopSecret"); # Password policies will be enforced!
+	$user->description("Alternate Admin"); 
+
+	my $user2 = $acs->users("name","acsadmin");
+	$user2->id(0); # Required for new user!
+	$user2->name("altadmin"); # Required field
+	$user2->password("TopSecret"); # Password policies will be enforced!
+	$user2->description("Alternate Admin"); 
+
+	my $id = $acs->create($user,$user2); 
+	# Create new users based on Net::Cisco::ACS::User instances in argument.
+	# Return value is ID generated by ACS but not guaranteed.
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure
+
+	my $device = $acs->devices("name","Main_Router");
+	$device->name("MainRouter"); # Required field
+	$device->description("Main Router"); 
+	$device->ips([{netMask => "32", ipAddress=>"10.0.0.1"}]); # Change IP address! Overlap check is enforced!
+	$device->id(0); # Required for new device!
+
+	my $device2 = $acs->devices("name","Alt_Router");
+	$device2->name("AltRouter"); # Required field
+	$device2->description("Standby Router"); 
+	$device2->ips([{netMask => "32", ipAddress=>"10.0.0.2"}]); # Change IP address! Overlap check is enforced!
+	$device2->id(0); # Required for new device!
+	
+    my $id = $acs->create($device,$device2);
+	# Create new device based on Net::Cisco::ACS::Device instance
+	# Return value is ID generated by ACS but not guaranteed.
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure
+    
 =item update
 
 This method updates an existing entry in Cisco ACS, depending on the argument passed. Record type is detected automatically. 
@@ -952,6 +1061,37 @@ This method updates an existing entry in Cisco ACS, depending on the argument pa
 	print $Net::Cisco::ACS::ERROR unless $id;
 	# $Net::Cisco::ACS::ERROR contains details about failure
 
+Multiple instances can be passed as an argument. Objects will be updated in bulk (one transaction). The returned ID is not guaranteed to be the IDs of the created objects.
+
+	my $user = $acs->users("name","acsadmin");
+	$user->id(0); # Required for new user!
+	$user->password("TopSecret"); # Password policies will be enforced!
+
+	my $user2 = $acs->users("name","acsadmin2");
+	$user2->password("TopSecret"); # Password policies will be enforced!
+
+	my $id = $acs->update($user,$user2); 
+	# Update users based on Net::Cisco::ACS::User instances in arguments
+	# Return value is ID generated by ACS but not guaranteed.
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure
+
+	my $device = $acs->devices("name","Main_Router");
+	$device->description("Main Router"); 
+	$device->ips([{netMask => "32", ipAddress=>"10.0.0.1"}]); # Change IP address! Overlap check is enforced!
+
+	my $device2 = $acs->devices("name","Alt_Router");
+	$device2->description("Standby Router"); 
+	$device2->ips([{netMask => "32", ipAddress=>"10.0.0.2"}]); # Change IP address! Overlap check is enforced!
+	
+    my $id = $acs->create($device,$device2);
+	# Update devices based on Net::Cisco::ACS::Device instances in arguments
+	# Return value is ID generated by ACS but not guaranteed.
+	# print "Record ID is $id" if $id;
+	# print $Net::Cisco::ACS::ERROR unless $id;
+	# $Net::Cisco::ACS::ERROR contains details about failure    
+    
 =item delete
 
 This method deletes an existing entry in Cisco ACS, depending on the argument passed. Record type is detected automatically. 
