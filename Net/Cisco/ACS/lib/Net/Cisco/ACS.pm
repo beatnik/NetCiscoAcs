@@ -55,18 +55,27 @@ has 'hostname' => (
 	required => '1',
 	); 
 
+has 'mock' => (
+	is => 'rw',
+	isa => 'Str',
+	default => '0',
+	);    
+    
 sub users # No Moose here :(
 {	my $self = shift;
     $ERROR = "";
 	if (@_)
 	{ my %args = @_; 
-	  $self->{"Users"} = $args{"users"}; 
+	  $self->{"Users"} = $args{"users"};
+      if ($self->mock())
+      { return $self->{"Users"}; }
+      
 	  if ($args{"name"})
 	  { $self->{"Users"} = $self->query("User","name",$args{"name"}); }
 	  if ($args{"id"})
 	  { $self->{"Users"} = $self->query("User","id",$args{"id"}); }
 	} else
-	{ $self->{"Users"} = $self->query("User"); 
+	{ $self->{"Users"} = $self->query("User") unless $self->mock();
 	}
 	return $self->{"Users"};
 }	
@@ -77,6 +86,9 @@ sub identitygroups # No Moose here :(
 	if (@_)
 	{ my %args = @_; 
 	  $self->{"IdentityGroups"} = $args{"identitygroups"}; 
+      if ($self->mock())
+      { return $self->{"IdentityGroups"}; }
+
 	  if ($args{"name"})
 	  { $self->{"IdentityGroups"} = $self->query("IdentityGroup","name",$args{"name"}); }
 	  if ($args{"id"})
@@ -92,7 +104,10 @@ sub devices # No Moose here :(
 	$ERROR = "";
 	if (@_)
 	{ my %args = @_; 
-	  $self->{"Devices"} = $args{"devices"}; 
+	  $self->{"Devices"} = $args{"devices"};
+      if ($self->mock())
+      { return $self->{"Devices"}; }
+
 	  if ($args{"name"})
 	  { $self->{"Devices"} = $self->query("Device","name",$args{"name"}); }
 	  if ($args{"id"})
@@ -108,7 +123,10 @@ sub devicegroups # No Moose here :(
 	$ERROR = "";
 	if (@_)
 	{ my %args = @_; 
-	  $self->{"DeviceGroups"} = $args{"devicegroups"}; 
+	  $self->{"DeviceGroups"} = $args{"devicegroups"};
+      if ($self->mock())
+      { return $self->{"DeviceGroups"}; }
+
 	  if ($args{"name"})
 	  { $self->{"DeviceGroups"} = $self->query("DeviceGroup","name",$args{"name"}); }
 	  if ($args{"id"})
@@ -124,7 +142,10 @@ sub hosts # No Moose here :(
 	$ERROR = "";
 	if (@_)
 	{ my %args = @_; 
-	  $self->{"Hosts"} = $args{"hosts"}; 
+	  $self->{"Hosts"} = $args{"hosts"};
+      if ($self->mock())
+      { return $self->{"Hosts"}; }
+
 	  if ($args{"name"})
 	  { $self->{"Hosts"} = $self->query("Host","name",$args{"name"}); }
 	  if ($args{"id"})
