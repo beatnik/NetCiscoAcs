@@ -5,7 +5,7 @@ use Moose;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %actions);
-    $VERSION     = '0.03';
+    $VERSION     = '0.04';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -23,7 +23,7 @@ BEGIN {
 		   
 has 'description' => (
       is  => 'rw',
-      isa => 'Any',
+      isa => 'Str',
   );
 
 has 'id' => (
@@ -79,7 +79,7 @@ has 'enabled' => (
 
 has 'lastLogin' => (
 	is => 'ro',
-	isa => 'Any',
+	isa => 'Str',
 	);
 
 has 'lastModified' => (

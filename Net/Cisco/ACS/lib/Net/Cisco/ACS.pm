@@ -22,7 +22,7 @@ use Net::Cisco::ACS::Host;
 BEGIN {
     use Exporter ();
     use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $ERROR %actions);
-    $VERSION     = '0.03';
+    $VERSION     = '0.04';
     @ISA         = qw(Exporter);
     @EXPORT      = qw();
     @EXPORT_OK   = qw();
@@ -452,7 +452,7 @@ sub parse_xml
 { my $self = shift;
   my $type = shift;
   my $xml_ref = shift;
-  my $xmlsimple = XML::Simple->new();
+  my $xmlsimple = XML::Simple->new(SuppressEmpty => 1);
   my $xmlout = $xmlsimple->XMLin($xml_ref);
   if ($type eq "Users")
   { my $users_ref = $xmlout->{"User"};
